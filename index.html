@@ -8,6 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Supabase Auth + Cloud Sync -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
@@ -71,17 +73,17 @@
                 <div class="text-center mb-7">
                     <div class="mx-auto w-16 h-16 rounded-2xl bg-emerald-500 text-white flex items-center justify-center text-2xl shadow-lg shadow-emerald-500/30"><i class="fa-solid fa-shield-halved"></i></div>
                     <h2 id="authTitle" class="text-xl font-bold text-slate-800 mt-4">Đăng nhập tài khoản</h2>
-                    <p id="authSubtitle" class="text-xs text-slate-400 mt-1">Dữ liệu tài chính được tách riêng theo từng tài khoản trên thiết bị này.</p>
+                    <p id="authSubtitle" class="text-xs text-slate-400 mt-1">Đăng nhập bằng email để đồng bộ dữ liệu giữa máy tính và điện thoại.</p>
                 </div>
                 <form id="authForm" onsubmit="submitAuth(event)" class="space-y-4">
-                    <div><label class="block text-xs font-semibold text-slate-600 mb-1.5">Tài khoản / Email</label><input id="authIdentifier" type="text" autocomplete="username" required placeholder="VD: taikhoan hoặc email@example.com" class="w-full p-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"></div>
+                    <div><label class="block text-xs font-semibold text-slate-600 mb-1.5">Email tài khoản</label><input id="authIdentifier" type="email" autocomplete="username" required placeholder="email@example.com" class="w-full p-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"></div>
                     <div><label class="block text-xs font-semibold text-slate-600 mb-1.5">Mật khẩu</label><div class="relative"><input id="authPassword" type="password" autocomplete="current-password" required minlength="6" placeholder="Tối thiểu 6 ký tự" class="w-full p-3 pr-11 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"><button type="button" onclick="toggleAuthPassword()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"><i id="authPasswordIcon" class="fa-solid fa-eye"></i></button></div></div>
                     <div id="authConfirmWrap" class="hidden"><label class="block text-xs font-semibold text-slate-600 mb-1.5">Nhập lại mật khẩu</label><input id="authConfirm" type="password" autocomplete="new-password" minlength="6" placeholder="Nhập lại mật khẩu" class="w-full p-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"></div>
                     <button id="authSubmitBtn" type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl text-sm transition shadow-lg shadow-emerald-500/20">Đăng nhập</button>
                 </form>
                 <div id="authError" class="hidden mt-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs"></div>
                 <div class="mt-6 pt-5 border-t border-slate-100 text-center"><button id="authModeBtn" type="button" onclick="toggleAuthMode()" class="text-xs font-semibold text-emerald-600 hover:text-emerald-700">Chưa có tài khoản? Tạo tài khoản</button></div>
-                <div class="mt-4 p-3 rounded-xl bg-amber-50 border border-amber-200 text-[10px] text-amber-700 leading-relaxed"><i class="fa-solid fa-circle-info mr-1"></i> Bảo vệ tài khoản <strong>trên thiết bị này</strong>. Mật khẩu không lưu dạng chữ thường. Đăng nhập đa thiết bị/khôi phục qua email cần máy chủ xác thực.</div>
+                <div id="cloudStatus" class="mt-4 p-3 rounded-xl bg-blue-50 border border-blue-200 text-[10px] text-blue-700 leading-relaxed"><i class="fa-solid fa-cloud mr-1"></i> Đang kiểm tra kết nối đồng bộ...</div>
             </div>
         </div>
     </div>
@@ -653,16 +655,38 @@
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
-        // ==================== LOCAL ACCOUNT SECURITY ====================
+        // ==================== SUPABASE ACCOUNT + CLOUD SYNC ====================
+        // Dán 2 giá trị này sau khi tạo project Supabase. Publishable key có thể nằm trong mã frontend;
+        // bảo mật dữ liệu được thực hiện bằng Auth + Row Level Security (RLS), không dùng service_role key.
+        const SUPABASE_URL = 'https://gszgovybklzfucobvokb.supabase.co';
+        const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_fyflkLzPwRC5vss7IHt79w_-v6s41a7';
         const AUTH_KEY = 'sf_pro_accounts_v2';
         const SESSION_KEY = 'sf_pro_session_v2';
         const DATA_PREFIX = 'sf_pro_user_v2_';
         let authMode = 'login';
         let currentUser = null;
+        let currentUserId = null;
+        let supabaseClient = null;
+        let cloudSyncTimer = null;
         const legacyKeys = ['transactions','savings','saving_history','credit','credit_history','income_sources','six_jars'];
         const storageKey = key => DATA_PREFIX + currentUser + '_' + key;
         const getUserData = (key, fallback) => { if(!currentUser) return fallback; const raw=localStorage.getItem(storageKey(key)); return raw===null ? fallback : JSON.parse(raw); };
-        const setUserData = (key,value) => { if(currentUser) localStorage.setItem(storageKey(key),JSON.stringify(value)); };
+        const setUserData = (key,value) => {
+            if(!currentUser) return;
+            localStorage.setItem(storageKey(key),JSON.stringify(value));
+            queueCloudSync();
+        };
+        function cloudConfigured(){ return SUPABASE_URL.startsWith('https://') && !SUPABASE_URL.includes('__SUPABASE_') && SUPABASE_PUBLISHABLE_KEY && !SUPABASE_PUBLISHABLE_KEY.includes('__SUPABASE_'); }
+        function initSupabaseClient(){
+            if(cloudConfigured() && window.supabase?.createClient){
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, { auth: { autoRefreshToken:true, persistSession:true, detectSessionInUrl:true } });
+            }
+        }
+        function setCloudStatus(message, type='info'){
+            const el=document.getElementById('cloudStatus'); if(!el) return;
+            el.className='mt-4 p-3 rounded-xl text-[10px] leading-relaxed '+(type==='ok'?'bg-emerald-50 border border-emerald-200 text-emerald-700':type==='error'?'bg-rose-50 border border-rose-200 text-rose-700':'bg-blue-50 border border-blue-200 text-blue-700');
+            el.innerHTML='<i class="fa-solid '+(type==='ok'?'fa-cloud-arrow-up':type==='error'?'fa-triangle-exclamation':'fa-cloud')+' mr-1"></i> '+message;
+        }
         function bytesToBase64(bytes){ let binary=''; for(let i=0;i<bytes.length;i+=0x8000) binary+=String.fromCharCode(...bytes.subarray(i,i+0x8000)); return btoa(binary); }
         function base64ToBytes(value){ const binary=atob(value), bytes=new Uint8Array(binary.length); for(let i=0;i<binary.length;i++) bytes[i]=binary.charCodeAt(i); return bytes; }
         function constantTimeEqual(a,b){ if(a.length!==b.length) return false; let diff=0; for(let i=0;i<a.length;i++) diff|=a.charCodeAt(i)^b.charCodeAt(i); return diff===0; }
@@ -671,15 +695,118 @@
         function getAccounts(){ return JSON.parse(localStorage.getItem(AUTH_KEY)||'{}'); }
         function saveAccounts(v){ localStorage.setItem(AUTH_KEY,JSON.stringify(v)); }
         function toggleAuthPassword(){ const input=document.getElementById('authPassword'), icon=document.getElementById('authPasswordIcon'); input.type=input.type==='password'?'text':'password'; icon.className=input.type==='password'?'fa-solid fa-eye':'fa-solid fa-eye-slash'; }
-        function toggleAuthMode(){ authMode=authMode==='login'?'register':'login'; const reg=authMode==='register'; document.getElementById('authTitle').textContent=reg?'Tạo tài khoản mới':'Đăng nhập tài khoản'; document.getElementById('authSubtitle').textContent=reg?'Tạo tài khoản để bảo vệ và tách riêng dữ liệu tài chính.':'Dữ liệu tài chính được tách riêng theo từng tài khoản trên thiết bị này.'; document.getElementById('authConfirmWrap').classList.toggle('hidden',!reg); document.getElementById('authConfirm').required=reg; document.getElementById('authPassword').autocomplete=reg?'new-password':'current-password'; document.getElementById('authSubmitBtn').textContent=reg?'Tạo tài khoản & đăng nhập':'Đăng nhập'; document.getElementById('authModeBtn').textContent=reg?'Đã có tài khoản? Đăng nhập':'Chưa có tài khoản? Tạo tài khoản'; hideAuthError(); }
+        function toggleAuthMode(){ authMode=authMode==='login'?'register':'login'; const reg=authMode==='register'; document.getElementById('authTitle').textContent=reg?'Tạo tài khoản cloud mới':'Đăng nhập tài khoản'; document.getElementById('authSubtitle').textContent=reg?'Tạo tài khoản để đồng bộ dữ liệu giữa máy tính và điện thoại.':'Đăng nhập để tải dữ liệu tài chính từ cloud.'; document.getElementById('authConfirmWrap').classList.toggle('hidden',!reg); document.getElementById('authConfirm').required=reg; document.getElementById('authPassword').autocomplete=reg?'new-password':'current-password'; document.getElementById('authSubmitBtn').textContent=reg?'Tạo tài khoản & đăng nhập':'Đăng nhập'; document.getElementById('authModeBtn').textContent=reg?'Đã có tài khoản? Đăng nhập':'Chưa có tài khoản? Tạo tài khoản'; hideAuthError(); }
         function showAuthError(message){ const el=document.getElementById('authError'); el.textContent=message; el.classList.remove('hidden'); }
         function hideAuthError(){ document.getElementById('authError').classList.add('hidden'); }
         function migrateLegacyData(username){ if(localStorage.getItem(DATA_PREFIX+username+'_transactions')!==null) return; const hasLegacy=legacyKeys.some(k=>localStorage.getItem('sf_pro_'+k)!==null); if(!hasLegacy) return; legacyKeys.forEach(k=>{ const raw=localStorage.getItem('sf_pro_'+k); if(raw!==null) localStorage.setItem(DATA_PREFIX+username+'_'+k,raw); }); }
-        async function submitAuth(event){ event.preventDefault(); hideAuthError(); const identifier=normalizeIdentifier(document.getElementById('authIdentifier').value), password=document.getElementById('authPassword').value; if(!identifier||password.length<6) return showAuthError('Vui lòng nhập tài khoản và mật khẩu tối thiểu 6 ký tự.'); const accounts=getAccounts(); if(authMode==='register'){ if(accounts[identifier]) return showAuthError('Tài khoản này đã tồn tại. Hãy đăng nhập.'); const confirm=document.getElementById('authConfirm').value; if(password!==confirm) return showAuthError('Mật khẩu nhập lại không khớp.'); const hp=await hashPassword(password); accounts[identifier]={hash:hp.hash,salt:hp.salt,createdAt:new Date().toISOString()}; saveAccounts(accounts); migrateLegacyData(identifier); } else { const account=accounts[identifier]; if(!account) return showAuthError('Không tìm thấy tài khoản này.'); const hp=await hashPassword(password,base64ToBytes(account.salt)); if(!constantTimeEqual(hp.hash,account.hash)) return showAuthError('Sai tài khoản hoặc mật khẩu.'); } currentUser=identifier; sessionStorage.setItem(SESSION_KEY,currentUser); enterApp(); }
-        function logout(){ if(!confirm('Đăng xuất tài khoản hiện tại?')) return; currentUser=null; sessionStorage.removeItem(SESSION_KEY); location.reload(); }
-        function enterApp(){ loadCurrentUserData(); document.getElementById('authScreen').classList.add('hidden'); document.getElementById('appShell').classList.remove('hidden'); document.getElementById('currentUserDisplay')?.replaceChildren(document.createTextNode(currentUser)); updateCategoryOptions(); updateSavingSourceOptions(); renderAll(); runFinancialAdvisor(); createDailyCreditStatements(); renderCreditCards(); startRealtimeClock(); }
-        function loadCurrentUserData(){ transactions=getUserData('transactions',[]); savings=getUserData('savings',[{id:1,name:'Sổ mua xe',bank:'Timo',principal:3200000,rate:8.2,date:'2026-09-20',month:6,action:'full'}]); savingHistory=getUserData('saving_history',[]); creditCards=getUserData('credit',[{id:1,bank:'Thẻ VIB',limit:20000000,warningLimit:5000000,debt:1000000,statementDate:20,dueDate:5},{id:2,bank:'Thẻ Techcombank',limit:15000000,warningLimit:4000000,debt:1200000,statementDate:15,dueDate:28}]); creditCardHistory=getUserData('credit_history',[]); incomeSources=getUserData('income_sources',[{id:1,name:'Lương chính',amount:20000000},{id:2,name:'Thu nhập phụ / Freelance',amount:5000000}]); sixJars=getUserData('six_jars',{'NEC':{name:'NEC - Nhu yếu phẩm thiết yếu',percent:55,limit:13750000,categories:['Ăn uống','Nhà ở & Điện nước','Di chuyển']},'PLAY':{name:'PLAY - Hưởng thụ & Giải trí',percent:10,limit:2500000,categories:['Mua sắm','Giải trí']},'EDUC':{name:'EDUC - Giáo dục & Phát triển',percent:10,limit:2500000,categories:['Sức khỏe','Giáo dục']},'LTSS':{name:'LTSS - Tiết kiệm dài hạn',percent:10,limit:2500000,categories:[]},'FFA':{name:'FFA - Tự do tài chính',percent:10,limit:2500000,categories:[]},'GIVE':{name:'GIVE - Từ thiện & Xã hội',percent:5,limit:1250000,categories:['Từ thiện','Chi phí khác']}}); }
-        function initAuthentication(){ const saved=sessionStorage.getItem(SESSION_KEY); if(saved&&getAccounts()[saved]){ currentUser=saved; enterApp(); return; } document.getElementById('authScreen').classList.remove('hidden'); document.getElementById('appShell').classList.add('hidden'); }
+        function getCurrentLocalBundle(){
+            return { transactions, savings, saving_history:savingHistory, credit:creditCards, credit_history:creditCardHistory, income_sources:incomeSources, six_jars:sixJars };
+        }
+        function applyBundle(bundle){
+            if(!bundle) return;
+            if(Array.isArray(bundle.transactions)) transactions=bundle.transactions;
+            if(Array.isArray(bundle.savings)) savings=bundle.savings;
+            if(Array.isArray(bundle.saving_history)) savingHistory=bundle.saving_history;
+            if(Array.isArray(bundle.credit)) creditCards=bundle.credit;
+            if(Array.isArray(bundle.credit_history)) creditCardHistory=bundle.credit_history;
+            if(Array.isArray(bundle.income_sources)) incomeSources=bundle.income_sources;
+            if(bundle.six_jars && typeof bundle.six_jars==='object') sixJars=bundle.six_jars;
+        }
+        function persistLocalBundle(){
+            if(!currentUser) return;
+            const bundle=getCurrentLocalBundle();
+            Object.entries(bundle).forEach(([key,value])=>localStorage.setItem(storageKey(key),JSON.stringify(value)));
+        }
+        function queueCloudSync(){
+            if(!supabaseClient || !currentUserId || cloudLoading) return;
+            clearTimeout(cloudSyncTimer);
+            cloudSyncTimer=setTimeout(()=>syncCurrentDataToCloud(),700);
+        }
+        async function syncCurrentDataToCloud(){
+            if(!supabaseClient || !currentUserId) return;
+            try{
+                const {error}=await supabaseClient.from('finance_data').upsert({user_id:currentUserId,data:getCurrentLocalBundle(),updated_at:new Date().toISOString()},{onConflict:'user_id'});
+                if(error) throw error;
+                setCloudStatus('Dữ liệu đã được đồng bộ lên cloud.','ok');
+            }catch(err){
+                console.error('Cloud sync error:',err);
+                setCloudStatus('Chưa đồng bộ được dữ liệu. Kiểm tra cấu hình Supabase/RLS.','error');
+            }
+        }
+        async function loadCloudDataOrMigrate(){
+            cloudLoading=true;
+            try{
+                const {data:row,error}=await supabaseClient.from('finance_data').select('data,updated_at').eq('user_id',currentUserId).maybeSingle();
+                if(error) throw error;
+                if(row?.data && Object.keys(row.data).length){
+                    applyBundle(row.data);
+                    persistLocalBundle();
+                    setCloudStatus('Đã tải dữ liệu từ cloud.','ok');
+                }else{
+                    // Tài khoản cloud mới: giữ dữ liệu đang có trên máy nếu có, rồi tải lên cloud.
+                    migrateLegacyData(currentUser || 'cloud');
+                    persistLocalBundle();
+                    await supabaseClient.from('finance_data').upsert({user_id:currentUserId,data:getCurrentLocalBundle(),updated_at:new Date().toISOString()},{onConflict:'user_id'});
+                    setCloudStatus('Đã tạo dữ liệu cloud cho tài khoản này.','ok');
+                }
+            }catch(err){
+                console.error('Cloud load error:',err);
+                setCloudStatus('Không tải được dữ liệu cloud: '+(err.message||'lỗi kết nối'),'error');
+                // fallback local, không xóa dữ liệu hiện có
+                loadCurrentUserDataLocal();
+            }finally{ cloudLoading=false; }
+        }
+        async function submitAuth(event){
+            event.preventDefault(); hideAuthError();
+            const email=normalizeIdentifier(document.getElementById('authIdentifier').value), password=document.getElementById('authPassword').value;
+            if(!email || !email.includes('@')) return showAuthError('Vui lòng nhập email hợp lệ.');
+            if(password.length<6) return showAuthError('Mật khẩu tối thiểu 6 ký tự.');
+            if(!supabaseClient){
+                return showAuthError('App chưa được cấu hình Supabase. Cần dán SUPABASE_URL và Publishable Key vào bản app.');
+            }
+            document.getElementById('authSubmitBtn').disabled=true;
+            try{
+                if(authMode==='register'){
+                    const confirm=document.getElementById('authConfirm').value;
+                    if(password!==confirm) return showAuthError('Mật khẩu nhập lại không khớp.');
+                    const {data,error}=await supabaseClient.auth.signUp({email,password});
+                    if(error) throw error;
+                    if(!data.session){
+                        showAuthError('Đã tạo tài khoản. Hãy mở email và xác nhận tài khoản, sau đó quay lại đăng nhập.');
+                        return;
+                    }
+                    await finishCloudLogin(data.user);
+                }else{
+                    const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});
+                    if(error) throw error;
+                    await finishCloudLogin(data.user);
+                }
+            }catch(err){
+                showAuthError(err.message || 'Đăng nhập thất bại.');
+            }finally{ document.getElementById('authSubmitBtn').disabled=false; }
+        }
+        async function finishCloudLogin(user){
+            currentUser=user.email || user.id; currentUserId=user.id;
+            sessionStorage.setItem(SESSION_KEY,currentUser);
+            await loadCurrentUserDataLocal();
+            await loadCloudDataOrMigrate();
+            await enterApp();
+        }
+        function logout(){ if(!confirm('Đăng xuất tài khoản hiện tại?')) return; if(supabaseClient) supabaseClient.auth.signOut().catch(()=>{}); currentUser=null; currentUserId=null; sessionStorage.removeItem(SESSION_KEY); location.reload(); }
+        async function enterApp(){ loadCurrentUserDataLocal(); document.getElementById('authScreen').classList.add('hidden'); document.getElementById('appShell').classList.remove('hidden'); document.getElementById('currentUserDisplay')?.replaceChildren(document.createTextNode(currentUser || 'Tài khoản')); updateCategoryOptions(); updateSavingSourceOptions(); renderAll(); runFinancialAdvisor(); createDailyCreditStatements(); renderCreditCards(); startRealtimeClock(); }
+        function loadCurrentUserDataLocal(){ transactions=getUserData('transactions',[]); savings=getUserData('savings',[{id:1,name:'Sổ mua xe',bank:'Timo',principal:3200000,rate:8.2,date:'2026-09-20',month:6,action:'full'}]); savingHistory=getUserData('saving_history',[]); creditCards=getUserData('credit',[{id:1,bank:'Thẻ VIB',limit:20000000,warningLimit:5000000,debt:1000000,statementDate:20,dueDate:5},{id:2,bank:'Thẻ Techcombank',limit:15000000,warningLimit:4000000,debt:1200000,statementDate:15,dueDate:28}]); creditCardHistory=getUserData('credit_history',[]); incomeSources=getUserData('income_sources',[{id:1,name:'Lương chính',amount:20000000},{id:2,name:'Thu nhập phụ / Freelance',amount:5000000}]); sixJars=getUserData('six_jars',{'NEC':{name:'NEC - Nhu yếu phẩm thiết yếu',percent:55,limit:13750000,categories:['Ăn uống','Nhà ở & Điện nước','Di chuyển']},'PLAY':{name:'PLAY - Hưởng thụ & Giải trí',percent:10,limit:2500000,categories:['Mua sắm','Giải trí']},'EDUC':{name:'EDUC - Giáo dục & Phát triển',percent:10,limit:2500000,categories:['Sức khỏe','Giáo dục']},'LTSS':{name:'LTSS - Tiết kiệm dài hạn',percent:10,limit:2500000,categories:[]},'FFA':{name:'FFA - Tự do tài chính',percent:10,limit:2500000,categories:[]},'GIVE':{name:'GIVE - Từ thiện & Xã hội',percent:5,limit:1250000,categories:['Từ thiện','Chi phí khác']}}); }
+        async function initAuthentication(){
+            initSupabaseClient();
+            if(!supabaseClient){ setCloudStatus('Chưa cấu hình cloud. Hãy cấu hình Supabase để dùng cùng một tài khoản trên nhiều thiết bị.','error'); document.getElementById('authScreen').classList.remove('hidden'); document.getElementById('appShell').classList.add('hidden'); return; }
+            try{
+                const {data:{session}}=await supabaseClient.auth.getSession();
+                if(session?.user){ await finishCloudLogin(session.user); return; }
+                supabaseClient.auth.onAuthStateChange(async (event,session)=>{
+                    if(event==='SIGNED_IN' && session?.user && !currentUserId){ await finishCloudLogin(session.user); }
+                });
+            }catch(err){ console.error(err); setCloudStatus('Không kiểm tra được phiên đăng nhập.','error'); }
+            document.getElementById('authScreen').classList.remove('hidden'); document.getElementById('appShell').classList.add('hidden');
+        }
 
         let transactions = [];
         let savings = [];

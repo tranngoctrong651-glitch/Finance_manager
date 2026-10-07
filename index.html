@@ -3,13 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>tài chính cá nhân Ngọc Trọng - Quản Lý Tài Chính & Thẻ Tín Dụng</title>
+    <title>Tài Chính Cá Nhân Ngọc Trọng - G.Ta-18 Edition</title>
     <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com">document.addEventListener('DOMContentLoaded',()=>{ const st=document.getElementById('igStart'); if(st&&!st.value) st.value=new Date().toISOString().slice(0,10); populateInstallmentCards(); renderInstallments(); });
+</script>
     <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js">document.addEventListener('DOMContentLoaded',()=>{ const st=document.getElementById('igStart'); if(st&&!st.value) st.value=new Date().toISOString().slice(0,10); populateInstallmentCards(); renderInstallments(); });
+</script>
     <!-- Supabase Auth + Cloud Sync -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">document.addEventListener('DOMContentLoaded',()=>{ const st=document.getElementById('igStart'); if(st&&!st.value) st.value=new Date().toISOString().slice(0,10); populateInstallmentCards(); renderInstallments(); });
+</script>
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
@@ -23,7 +26,8 @@
           .then(() => console.log('Service Worker Registered!'))
           .catch((err) => console.log('Service Worker Failed:', err));
       }
-    </script>
+    document.addEventListener('DOMContentLoaded',()=>{ const st=document.getElementById('igStart'); if(st&&!st.value) st.value=new Date().toISOString().slice(0,10); populateInstallmentCards(); renderInstallments(); });
+</script>
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
         /* Menu có thể thu gọn / mở rộng */
@@ -40,6 +44,17 @@
         #sidebarNav.sidebar-collapsed .sidebar-account > div:first-child { display: flex; }
         #sidebarNav.sidebar-collapsed .quick-add { padding-left: 0; padding-right: 0; }
         #sidebarNav.sidebar-collapsed .quick-add i { margin: 0; }
+        /* Khi thu gọn sidebar: chỉ giữ logo, không để tagline tràn thành từng chữ */
+        #sidebarNav.sidebar-collapsed .gt18-brand {
+            width: 52px; min-width: 52px; box-sizing: border-box;
+            padding: 7px 3px; margin-left: auto; margin-right: auto;
+            border-radius: 18px;
+        }
+        #sidebarNav.sidebar-collapsed .gt18-logo {
+            width: 44px; height: 44px; border-radius: 14px; font-size: 19px;
+        }
+        #sidebarNav.sidebar-collapsed .gt18-tagline,
+        #sidebarNav.sidebar-collapsed .gt18-edition { display: none; }
         #menuBackdrop { display:none; }
         @media (max-width: 767px) {
             #sidebarNav { position: fixed; left: 0; top: 0; bottom: 0; z-index: 80; width: 280px; transform: translateX(-105%); overflow-y: auto; }
@@ -62,6 +77,30 @@
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+        /* G.Ta-18 premium sidebar branding */
+        .gt18-brand {
+            position: relative; overflow: hidden;
+            padding: 14px 12px 16px; border-radius: 22px;
+            background: linear-gradient(145deg,#071b38 0%,#0b2547 55%,#062a3a 100%);
+            border: 1px solid rgba(45,212,191,.28);
+            box-shadow: 0 12px 30px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.05);
+        }
+        .gt18-brand:before,.gt18-brand:after { content:""; position:absolute; border-radius:50%; filter:blur(18px); pointer-events:none; }
+        .gt18-brand:before { width:90px;height:90px;left:-30px;top:-28px;background:rgba(16,185,129,.25); }
+        .gt18-brand:after { width:120px;height:70px;right:-35px;bottom:-30px;background:rgba(6,182,212,.16); }
+        .gt18-logo { width:48px;height:48px;border-radius:16px; flex:none;
+            background:linear-gradient(145deg,#10d99b,#06b6d4); color:#fff;
+            display:flex;align-items:center;justify-content:center;font-size:21px;
+            box-shadow:0 8px 20px rgba(16,185,129,.32); position:relative; z-index:1;
+        }
+        .gt18-brand-title { color:#fff;font-size:14px;font-weight:800;line-height:1.15;letter-spacing:.02em; }
+        .gt18-brand-name { color:#55f0c4;font-size:18px;font-weight:800;line-height:1.1;margin-top:3px; }
+        .gt18-edition { display:inline-flex;align-items:center;gap:5px;margin-top:7px;padding:4px 9px;border:1px solid rgba(45,212,191,.55);
+            border-radius:999px;color:#d9fffa;background:rgba(15,118,110,.20);font-size:10px;font-weight:800;letter-spacing:.02em;
+        }
+        .gt18-tagline { margin-top:9px;display:flex;align-items:center;gap:7px;color:#cbd5e1;font-size:9px;line-height:1.35; }
+        .gt18-tagline i { color:#5eead4; }
     </style>
 </head>
 <body class="bg-[#f8fafc] text-slate-800 min-h-screen flex flex-col md:flex-row">
@@ -93,15 +132,17 @@
     <div id="menuBackdrop" onclick="toggleSidebar(false)"></div>
     <aside id="sidebarNav" class="w-full md:w-64 bg-[#0f172a] text-slate-300 flex flex-col justify-between p-5 shrink-0 shadow-lg">
         <div>
-            <!-- Logo / App Name -->
-            <div class="sidebar-brand flex items-center space-x-3 mb-8 px-2">
-                <div class="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center text-lg font-bold shadow-md shadow-emerald-500/20 shrink-0">
-                    <i class="fa-solid fa-wallet"></i>
+            <!-- Logo / App Name - G.Ta-18 -->
+            <div class="gt18-brand sidebar-brand mb-7">
+                <div class="flex items-center gap-3 relative z-[1]">
+                    <div class="gt18-logo"><i class="fa-solid fa-wallet"></i></div>
+                    <div class="sidebar-brand-text min-w-0">
+                        <h1 class="gt18-brand-title">Tài Chính Cá Nhân</h1>
+                        <div class="gt18-brand-name">Ngọc Trọng</div>
+                        <div class="gt18-edition"><i class="fa-solid fa-sparkles"></i> G.Ta-18 Edition</div>
+                    </div>
                 </div>
-                <div class="sidebar-brand-text">
-                    <h1 class="text-white font-bold text-sm tracking-wide leading-tight">tài chính cá nhân Ngọc Trọng</h1>
-                    <p class="text-[11px] text-slate-400 mt-0.5">PWA Edition v3.19 (AI Auto)</p>
-                </div>
+                <div class="gt18-tagline relative z-[1]"><i class="fa-solid fa-shield-heart"></i><span>Quản lý tài chính thông minh • An toàn • Tiện lợi</span></div>
             </div>
 
             <!-- Menu Links -->
@@ -117,6 +158,9 @@
                 </button>
                 <button onclick="switchTab('credit')" id="nav-credit" class="sidebar-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition hover:bg-slate-800 text-slate-400 hover:text-white">
                     <i class="fa-solid fa-credit-card w-5"></i> <span>Thẻ Tín Dụng</span>
+                </button>
+                <button onclick="switchTab('installments')" id="nav-installments" class="sidebar-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition hover:bg-slate-800 text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-calendar-check w-5"></i> <span>Trả Góp</span>
                 </button>
                 <button onclick="switchTab('savings')" id="nav-savings" class="sidebar-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition hover:bg-slate-800 text-slate-400 hover:text-white">
                     <i class="fa-solid fa-piggy-bank w-5"></i> <span>Sổ Tiết Kiệm</span>
@@ -135,7 +179,10 @@
             <div class="sidebar-account-label px-2 pb-1 text-[10px] text-slate-500 uppercase tracking-wider">Tài khoản</div>
             <div class="sidebar-account px-3 py-2 rounded-xl bg-slate-800/70 flex items-center gap-2">
                 <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center"><i class="fa-solid fa-user text-xs"></i></div>
-                <span id="currentUserDisplay" class="text-[11px] text-slate-300 truncate flex-1">--</span>
+                <div class="min-w-0 flex-1">
+                    <span id="currentUserDisplay" class="block text-[11px] text-slate-300 truncate">--</span>
+                    <span id="sidebarSyncStatus" class="block text-[9px] text-emerald-400 truncate">● Cloud đồng bộ</span>
+                </div>
                 <button onclick="logout()" title="Đăng xuất" class="text-slate-500 hover:text-rose-400"><i class="fa-solid fa-right-from-bracket text-xs"></i></button>
             </div>
             <button onclick="openModal()" class="quick-add w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 px-4 rounded-xl text-sm transition shadow-lg shadow-emerald-500/20 flex items-center justify-center space-x-2">
@@ -146,6 +193,20 @@
 
     <!-- MAIN CONTENT AREA -->
     <main class="flex-1 p-4 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
+        <div id="appCloudBar" class="mb-3 bg-white border border-slate-200 rounded-xl px-3 py-2 flex flex-wrap items-center justify-between gap-2 shadow-sm text-[11px]">
+            <div class="flex items-center gap-2 min-w-0">
+                <span class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center"><i class="fa-solid fa-user-lock"></i></span>
+                <div class="min-w-0">
+                    <div class="font-bold text-slate-700 truncate">Tài khoản: <span id="appAccountEmail">--</span></div>
+                    <div class="text-[10px] text-slate-400">Dữ liệu được lưu và đồng bộ riêng theo tài khoản này</div>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <span id="appCloudSyncStatus" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold"><i class="fa-solid fa-cloud"></i> Đang đồng bộ</span>
+                <button onclick="refreshCloudFromAccount(true)" class="px-2.5 py-1 rounded-lg border border-slate-200 text-slate-600 hover:border-emerald-300 hover:text-emerald-600 bg-white" title="Kiểm tra dữ liệu mới nhất"><i class="fa-solid fa-rotate"></i></button>
+            </div>
+        </div>
+
         <button id="menuToggleBtn" onclick="toggleSidebar()" title="Ẩn / hiện menu" class="menu-toggle-btn w-10 h-10 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-emerald-600 hover:border-emerald-300 shadow-sm flex items-center justify-center transition">
             <i id="menuToggleIcon" class="fa-solid fa-bars"></i>
         </button>
@@ -178,6 +239,25 @@
             <!-- Khu vực hiển thị cảnh báo nhanh ngoài Dashboard -->
             <div id="dashboardAlertsContainer" class="space-y-2"></div>
 
+
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-amber-200 relative overflow-hidden">
+                <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
+                    <div class="min-w-0">
+                        <p class="text-[11px] font-bold text-amber-600 uppercase tracking-wider">Số Dư Đầu Kỳ — Dữ Liệu Đã Có Trước Đây</p>
+                        <h3 class="text-sm font-bold text-slate-800 mt-1">Thiết lập mốc hiện tại để không tính lại lịch sử cũ</h3>
+                        <p id="baselineSummary" class="text-[11px] text-slate-500 mt-1">Chỉ các giao dịch phát sinh từ mốc này mới làm thay đổi Số Dư Hiện Tại.</p>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 w-full lg:w-auto">
+                        <div><label class="block text-[10px] font-semibold text-slate-500 mb-1">Tiền đang có</label><input id="baselineCash" type="number" min="0" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs bg-white" placeholder="VNĐ"></div>
+                        <div><label class="block text-[10px] font-semibold text-slate-500 mb-1">Tiết kiệm hiện có</label><input id="baselineSavings" type="number" min="0" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs bg-white" placeholder="VNĐ"></div>
+                        <div><label class="block text-[10px] font-semibold text-slate-500 mb-1">Dư nợ tín dụng hiện có</label><input id="baselineCredit" type="number" min="0" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs bg-white" placeholder="VNĐ"></div>
+                        <div><label class="block text-[10px] font-semibold text-slate-500 mb-1">Ngày bắt đầu cập nhật</label><input id="baselineDate" type="date" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs bg-white"></div>
+                    </div>
+                    <button onclick="saveFinanceBaseline()" class="shrink-0 bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2.5 px-4 rounded-xl text-xs shadow-sm"><i class="fa-solid fa-floppy-disk mr-1"></i> Lưu mốc số dư</button>
+                </div>
+                <div class="mt-3 p-3 rounded-xl bg-amber-50 border border-amber-100 text-[11px] text-amber-800">💡 <strong>Nguyên tắc mới:</strong> Sổ tiết kiệm và dư nợ thẻ đã có trước đây được xem là <strong>số dư đầu kỳ</strong>, không tự tạo khoản Chi/Thu lịch sử. Khi có thu nhập mới, bạn chỉ nhập khoản thu mới; số tiền hiện có sẽ tăng theo thu nhập mới và giảm theo các khoản chi mới.</div>
+            </div>
+
             <!-- Thẻ thông số tổng quan -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden">
@@ -185,7 +265,7 @@
                         <div>
                             <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Số Dư Hiện Tại</p>
                             <h3 id="dashBalance" class="text-xl font-bold text-slate-800 mt-1">0 đ</h3>
-                            <p class="text-[11px] text-slate-400 mt-1">Tổng thu - Tổng chi</p>
+                            <p id="dashBalanceNote" class="text-[11px] text-slate-400 mt-1">Số dư đầu kỳ + Thu/Chi mới từ mốc quản lý</p>
                         </div>
                         <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-base">
                             <i class="fa-solid fa-wallet"></i>
@@ -244,6 +324,18 @@
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Theo dõi tiến độ trả góp -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                    <div>
+                        <h3 class="font-bold text-slate-700 text-sm flex items-center gap-2"><i class="fa-solid fa-chart-simple text-orange-500"></i> Tiến độ trả góp</h3>
+                        <p class="text-[11px] text-slate-400 mt-1">Theo dõi số tiền đã trả, còn lại và kỳ thanh toán tiếp theo.</p>
+                    </div>
+                    <button onclick="switchTab('installments')" class="text-xs font-semibold px-3 py-1.5 bg-orange-50 text-orange-600 border border-orange-200 rounded-xl hover:bg-orange-100">Quản lý trả góp</button>
+                </div>
+                <div id="dashboardInstallmentSummary"></div>
             </div>
 
             <!-- Biểu đồ phân tích -->
@@ -428,6 +520,70 @@
             </div>
         </section>
 
+        <!-- TAB TRẢ GÓP -->
+        <section id="tab-installments" class="tab-content hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <div>
+                        <h3 class="font-bold text-slate-700 text-sm"><i class="fa-solid fa-calendar-check text-orange-500 mr-2"></i> Quản Lý Khoản Trả Góp</h3>
+                        <p class="text-xs text-slate-400 mt-0.5">Theo dõi khoản trả góp bằng thẻ tín dụng hoặc qua ngân hàng/tổ chức tài chính, lịch đến hạn và cảnh báo.</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-right">
+                        <div class="bg-orange-50 border border-orange-100 px-3 py-2 rounded-xl"><span class="text-[10px] text-orange-500 font-semibold block">Còn phải trả</span><span id="installmentDebtTotal" class="text-sm font-bold text-orange-600">0 đ</span></div>
+                        <div class="bg-rose-50 border border-rose-100 px-3 py-2 rounded-xl"><span class="text-[10px] text-rose-500 font-semibold block">Đến hạn sớm</span><span id="installmentDueCount" class="text-sm font-bold text-rose-600">0 khoản</span></div>
+                    </div>
+                </div>
+
+                <form id="installmentForm" onsubmit="addInstallment(event)" class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                        <input type="text" id="igName" placeholder="Tên khoản (VD: iPhone 16)" required class="p-2.5 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        <input type="number" id="igTotal" min="1" placeholder="Tổng giá trị trả góp (VNĐ)" required oninput="updateInstallmentMonthlyPreview()" class="p-2.5 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        <input type="text" id="igMonthly" placeholder="Hệ thống tự tính số tiền mỗi kỳ" readonly class="p-2.5 rounded-xl border border-orange-200 text-xs bg-orange-50 font-semibold text-orange-700 focus:outline-none" value="">
+                        <input type="number" id="igMonths" min="1" placeholder="Số kỳ" required oninput="updateInstallmentMonthlyPreview()" class="p-2.5 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-orange-500">
+                    </div>
+                    <div class="text-[11px] text-orange-600 bg-orange-50 border border-orange-100 rounded-xl px-3 py-2">💡 <strong>Số tiền mỗi kỳ được hệ thống tự tính</strong> = Tổng giá trị ÷ Số kỳ. Bạn không cần nhập thủ công.</div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                        <div>
+                            <label class="block text-[10px] font-semibold text-slate-500 mb-1">Hình thức trả</label>
+                            <select id="igMethod" onchange="updateInstallmentMethodUI()" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs bg-white font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500">
+                                <option value="credit">Trả bằng thẻ tín dụng hiện có</option>
+                                <option value="finance">Trả qua ngân hàng / công ty tài chính</option>
+                            </select>
+                        </div>
+                        <div id="igCardWrap">
+                            <label class="block text-[10px] font-semibold text-slate-500 mb-1">Chọn thẻ tín dụng đang có</label>
+                            <select id="igCard" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"></select>
+                        </div>
+                        <div id="igFinanceWrap" class="hidden">
+                            <label class="block text-[10px] font-semibold text-slate-500 mb-1">Ngân hàng / công ty tài chính</label>
+                            <input type="text" id="igFinance" placeholder="VD: FE Credit, Home Credit..." class="w-full p-2.5 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-semibold text-slate-500 mb-1">Ngày bắt đầu</label>
+                            <input type="date" id="igStart" required class="w-full p-2.5 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-semibold text-slate-500 mb-1">Ngày đến hạn hàng tháng</label>
+                            <input type="number" id="igDueDay" min="1" max="31" value="5" placeholder="VD: 5" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
+                        <div>
+                            <label class="block text-[10px] font-semibold text-slate-500 mb-1">Cảnh báo trước</label>
+                            <div class="flex items-center gap-2">
+                                <input type="number" id="igWarningDays" min="0" max="30" value="5" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-orange-500">
+                                <span class="text-[10px] text-slate-400 whitespace-nowrap">ngày</span>
+                            </div>
+                        </div>
+                        <button type="submit" class="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2.5 px-4 rounded-xl text-xs transition shadow-sm h-[38px]"><i class="fa-solid fa-plus mr-1"></i> Thêm Khoản Trả Góp</button>
+                    </div>
+                </form>
+
+                <div id="installmentAlertList" class="space-y-2"></div>
+                <div class="divide-y divide-slate-100" id="installmentList"></div>
+            </div>
+        </section>
+
         <!-- TAB 5: SAVINGS (SỔ TIẾT KIỆM) -->
         <section id="tab-savings" class="tab-content hidden space-y-6">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-6">
@@ -471,7 +627,7 @@
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-200 items-center">
                         <div>
-                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Chọn nguồn tiền chi cho gốc ban đầu:</label>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Nguồn tiền (chỉ áp dụng khi mở sổ mới từ nay):</label>
                             <select id="svSourceCategory" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs bg-white font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"></select>
                         </div>
                         <button type="submit" class="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2.5 px-4 rounded-xl text-xs transition shadow-sm h-10 mt-auto">
@@ -644,6 +800,10 @@
                     <label id="ccActionLabel" class="block text-xs font-semibold text-slate-600 mb-1">Số tiền (VNĐ)</label>
                     <input type="number" id="ccActionAmount" placeholder="VD: 1000000" required class="w-full p-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-rose-500 focus:outline-none">
                 </div>
+                <div id="ccActionNoteWrap">
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Nội dung / Chi phí</label>
+                    <input type="text" id="ccActionNote" placeholder="VD: Ăn uống, xăng xe, mua vật tư..." class="w-full p-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-rose-500 focus:outline-none">
+                </div>
                 <div class="pt-2">
                     <button type="submit" class="w-full bg-rose-500 hover:bg-rose-600 text-white font-semibold py-2.5 rounded-xl text-xs transition shadow-sm">
                         Xác Nhận
@@ -668,6 +828,8 @@
         let currentUserId = null;
         let supabaseClient = null;
         let cloudSyncTimer = null;
+        let cloudLoading = false;
+        let lastCloudUpdatedAt = null;
         const legacyKeys = ['transactions','savings','saving_history','credit','credit_history','income_sources','six_jars'];
         const storageKey = key => DATA_PREFIX + currentUser + '_' + key;
         const getUserData = (key, fallback) => { if(!currentUser) return fallback; const raw=localStorage.getItem(storageKey(key)); return raw===null ? fallback : JSON.parse(raw); };
@@ -683,9 +845,18 @@
             }
         }
         function setCloudStatus(message, type='info'){
-            const el=document.getElementById('cloudStatus'); if(!el) return;
-            el.className='mt-4 p-3 rounded-xl text-[10px] leading-relaxed '+(type==='ok'?'bg-emerald-50 border border-emerald-200 text-emerald-700':type==='error'?'bg-rose-50 border border-rose-200 text-rose-700':'bg-blue-50 border border-blue-200 text-blue-700');
-            el.innerHTML='<i class="fa-solid '+(type==='ok'?'fa-cloud-arrow-up':type==='error'?'fa-triangle-exclamation':'fa-cloud')+' mr-1"></i> '+message;
+            const el=document.getElementById('cloudStatus');
+            if(el){
+                el.className='mt-4 p-3 rounded-xl text-[10px] leading-relaxed '+(type==='ok'?'bg-emerald-50 border border-emerald-200 text-emerald-700':type==='error'?'bg-rose-50 border border-rose-200 text-rose-700':'bg-blue-50 border border-blue-200 text-blue-700');
+                el.innerHTML='<i class="fa-solid '+(type==='ok'?'fa-cloud-arrow-up':type==='error'?'fa-triangle-exclamation':'fa-cloud')+' mr-1"></i> '+message;
+            }
+            const bar=document.getElementById('appCloudSyncStatus');
+            const side=document.getElementById('sidebarSyncStatus');
+            if(bar){
+                bar.className='inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-semibold '+(type==='error'?'bg-rose-50 text-rose-700 border border-rose-200':type==='ok'?'bg-emerald-50 text-emerald-700 border border-emerald-200':'bg-blue-50 text-blue-700 border border-blue-200');
+                bar.innerHTML='<i class="fa-solid '+(type==='error'?'fa-triangle-exclamation':type==='ok'?'fa-cloud-arrow-up':'fa-cloud')+'"></i> '+message;
+            }
+            if(side){ side.textContent=(type==='error'?'● Lỗi đồng bộ':type==='ok'?'● Đã đồng bộ cloud':'● Đang đồng bộ'); side.className='block text-[9px] '+(type==='error'?'text-rose-400':type==='ok'?'text-emerald-400':'text-blue-400')+' truncate'; }
         }
         function bytesToBase64(bytes){ let binary=''; for(let i=0;i<bytes.length;i+=0x8000) binary+=String.fromCharCode(...bytes.subarray(i,i+0x8000)); return btoa(binary); }
         function base64ToBytes(value){ const binary=atob(value), bytes=new Uint8Array(binary.length); for(let i=0;i<binary.length;i++) bytes[i]=binary.charCodeAt(i); return bytes; }
@@ -700,7 +871,7 @@
         function hideAuthError(){ document.getElementById('authError').classList.add('hidden'); }
         function migrateLegacyData(username){ if(localStorage.getItem(DATA_PREFIX+username+'_transactions')!==null) return; const hasLegacy=legacyKeys.some(k=>localStorage.getItem('sf_pro_'+k)!==null); if(!hasLegacy) return; legacyKeys.forEach(k=>{ const raw=localStorage.getItem('sf_pro_'+k); if(raw!==null) localStorage.setItem(DATA_PREFIX+username+'_'+k,raw); }); }
         function getCurrentLocalBundle(){
-            return { transactions, savings, saving_history:savingHistory, credit:creditCards, credit_history:creditCardHistory, income_sources:incomeSources, six_jars:sixJars };
+            return { transactions, savings, saving_history:savingHistory, credit:creditCards, credit_history:creditCardHistory, installments, income_sources:incomeSources, six_jars:sixJars, finance_baseline:financeBaseline };
         }
         function applyBundle(bundle){
             if(!bundle) return;
@@ -709,8 +880,10 @@
             if(Array.isArray(bundle.saving_history)) savingHistory=bundle.saving_history;
             if(Array.isArray(bundle.credit)) creditCards=bundle.credit;
             if(Array.isArray(bundle.credit_history)) creditCardHistory=bundle.credit_history;
+            if(Array.isArray(bundle.installments)) installments=bundle.installments;
             if(Array.isArray(bundle.income_sources)) incomeSources=bundle.income_sources;
             if(bundle.six_jars && typeof bundle.six_jars==='object') sixJars=bundle.six_jars;
+            if(bundle.finance_baseline && typeof bundle.finance_baseline==='object') financeBaseline={...financeBaseline,...bundle.finance_baseline};
         }
         function persistLocalBundle(){
             if(!currentUser) return;
@@ -727,7 +900,8 @@
             try{
                 const {error}=await supabaseClient.from('finance_data').upsert({user_id:currentUserId,data:getCurrentLocalBundle(),updated_at:new Date().toISOString()},{onConflict:'user_id'});
                 if(error) throw error;
-                setCloudStatus('Dữ liệu đã được đồng bộ lên cloud.','ok');
+                lastCloudUpdatedAt=new Date().toISOString();
+                setCloudStatus('Đã đồng bộ theo tài khoản.','ok');
             }catch(err){
                 console.error('Cloud sync error:',err);
                 setCloudStatus('Chưa đồng bộ được dữ liệu. Kiểm tra cấu hình Supabase/RLS.','error');
@@ -741,7 +915,8 @@
                 if(row?.data && Object.keys(row.data).length){
                     applyBundle(row.data);
                     persistLocalBundle();
-                    setCloudStatus('Đã tải dữ liệu từ cloud.','ok');
+                    lastCloudUpdatedAt=row.updated_at || null;
+                    setCloudStatus('Đã tải dữ liệu của tài khoản từ cloud.','ok');
                 }else{
                     // Tài khoản cloud mới: giữ dữ liệu đang có trên máy nếu có, rồi tải lên cloud.
                     migrateLegacyData(currentUser || 'cloud');
@@ -756,6 +931,24 @@
                 loadCurrentUserDataLocal();
             }finally{ cloudLoading=false; }
         }
+        async function refreshCloudFromAccount(manual=false){
+            if(!supabaseClient || !currentUserId || cloudLoading) return;
+            try{
+                const {data:row,error}=await supabaseClient.from('finance_data').select('data,updated_at').eq('user_id',currentUserId).maybeSingle();
+                if(error) throw error;
+                if(!row?.data) return;
+                const remoteTime=row.updated_at ? new Date(row.updated_at).getTime() : 0;
+                const localTime=lastCloudUpdatedAt ? new Date(lastCloudUpdatedAt).getTime() : 0;
+                if(manual || remoteTime > localTime){
+                    applyBundle(row.data);
+                    persistLocalBundle();
+                    lastCloudUpdatedAt=row.updated_at || lastCloudUpdatedAt;
+                    updateCategoryOptions(); updateSavingSourceOptions(); renderFinanceBaseline(); renderAll(); runFinancialAdvisor();
+                    setCloudStatus('Đã cập nhật dữ liệu mới nhất của tài khoản.','ok');
+                }
+            }catch(err){ console.error('Cloud refresh error:',err); setCloudStatus('Không kiểm tra được dữ liệu cloud.','error'); }
+        }
+
         async function submitAuth(event){
             event.preventDefault(); hideAuthError();
             const email=normalizeIdentifier(document.getElementById('authIdentifier').value), password=document.getElementById('authPassword').value;
@@ -793,8 +986,11 @@
             await enterApp();
         }
         function logout(){ if(!confirm('Đăng xuất tài khoản hiện tại?')) return; if(supabaseClient) supabaseClient.auth.signOut().catch(()=>{}); currentUser=null; currentUserId=null; sessionStorage.removeItem(SESSION_KEY); location.reload(); }
-        async function enterApp(){ loadCurrentUserDataLocal(); document.getElementById('authScreen').classList.add('hidden'); document.getElementById('appShell').classList.remove('hidden'); document.getElementById('currentUserDisplay')?.replaceChildren(document.createTextNode(currentUser || 'Tài khoản')); updateCategoryOptions(); updateSavingSourceOptions(); renderAll(); runFinancialAdvisor(); createDailyCreditStatements(); renderCreditCards(); startRealtimeClock(); }
-        function loadCurrentUserDataLocal(){ transactions=getUserData('transactions',[]); savings=getUserData('savings',[{id:1,name:'Sổ mua xe',bank:'Timo',principal:3200000,rate:8.2,date:'2026-09-20',month:6,action:'full'}]); savingHistory=getUserData('saving_history',[]); creditCards=getUserData('credit',[{id:1,bank:'Thẻ VIB',limit:20000000,warningLimit:5000000,debt:1000000,statementDate:20,dueDate:5},{id:2,bank:'Thẻ Techcombank',limit:15000000,warningLimit:4000000,debt:1200000,statementDate:15,dueDate:28}]); creditCardHistory=getUserData('credit_history',[]); incomeSources=getUserData('income_sources',[{id:1,name:'Lương chính',amount:20000000},{id:2,name:'Thu nhập phụ / Freelance',amount:5000000}]); sixJars=getUserData('six_jars',{'NEC':{name:'NEC - Nhu yếu phẩm thiết yếu',percent:55,limit:13750000,categories:['Ăn uống','Nhà ở & Điện nước','Di chuyển']},'PLAY':{name:'PLAY - Hưởng thụ & Giải trí',percent:10,limit:2500000,categories:['Mua sắm','Giải trí']},'EDUC':{name:'EDUC - Giáo dục & Phát triển',percent:10,limit:2500000,categories:['Sức khỏe','Giáo dục']},'LTSS':{name:'LTSS - Tiết kiệm dài hạn',percent:10,limit:2500000,categories:[]},'FFA':{name:'FFA - Tự do tài chính',percent:10,limit:2500000,categories:[]},'GIVE':{name:'GIVE - Từ thiện & Xã hội',percent:5,limit:1250000,categories:['Từ thiện','Chi phí khác']}}); }
+        async function enterApp(){ loadCurrentUserDataLocal(); document.getElementById('authScreen').classList.add('hidden'); document.getElementById('appShell').classList.remove('hidden'); document.getElementById('currentUserDisplay')?.replaceChildren(document.createTextNode(currentUser || 'Tài khoản')); document.getElementById('appAccountEmail')?.replaceChildren(document.createTextNode(currentUser || 'Tài khoản')); updateCategoryOptions(); updateSavingSourceOptions(); renderFinanceBaseline(); renderAll(); runFinancialAdvisor(); createDailyCreditStatements(); renderCreditCards(); populateInstallmentCards(); renderInstallments(); startRealtimeClock(); setCloudStatus('Đã đăng nhập — dữ liệu thuộc tài khoản này.','ok'); }
+
+        document.addEventListener('visibilitychange',()=>{ if(!document.hidden) refreshCloudFromAccount(false); });
+        window.addEventListener('focus',()=>refreshCloudFromAccount(false));
+        function loadCurrentUserDataLocal(){ transactions=getUserData('transactions',[]); savings=getUserData('savings',[{id:1,name:'Sổ mua xe',bank:'Timo',principal:3200000,rate:8.2,date:'2026-09-20',month:6,action:'full'}]); savingHistory=getUserData('saving_history',[]); creditCards=getUserData('credit',[{id:1,bank:'Thẻ VIB',limit:20000000,warningLimit:5000000,debt:1000000,statementDate:20,dueDate:5},{id:2,bank:'Thẻ Techcombank',limit:15000000,warningLimit:4000000,debt:1200000,statementDate:15,dueDate:28}]); creditCardHistory=getUserData('credit_history',[]); installments=getUserData('installments',[]); incomeSources=getUserData('income_sources',[{id:1,name:'Lương chính',amount:20000000},{id:2,name:'Thu nhập phụ / Freelance',amount:5000000}]); sixJars=getUserData('six_jars',{'NEC':{name:'NEC - Nhu yếu phẩm thiết yếu',percent:55,limit:13750000,categories:['Ăn uống','Nhà ở & Điện nước','Di chuyển']},'PLAY':{name:'PLAY - Hưởng thụ & Giải trí',percent:10,limit:2500000,categories:['Mua sắm','Giải trí']},'EDUC':{name:'EDUC - Giáo dục & Phát triển',percent:10,limit:2500000,categories:['Sức khỏe','Giáo dục']},'LTSS':{name:'LTSS - Tiết kiệm dài hạn',percent:10,limit:2500000,categories:[]},'FFA':{name:'FFA - Tự do tài chính',percent:10,limit:2500000,categories:[]},'GIVE':{name:'GIVE - Từ thiện & Xã hội',percent:5,limit:1250000,categories:['Từ thiện','Chi phí khác']}});; financeBaseline=getUserData('finance_baseline',{cash:0,savings:0,creditDebt:0,startDate:new Date().toISOString().slice(0,10)}); }
         async function initAuthentication(){
             initSupabaseClient();
             if(!supabaseClient){ setCloudStatus('Chưa cấu hình cloud. Hãy cấu hình Supabase để dùng cùng một tài khoản trên nhiều thiết bị.','error'); document.getElementById('authScreen').classList.remove('hidden'); document.getElementById('appShell').classList.add('hidden'); return; }
@@ -812,8 +1008,9 @@
         let savings = [];
         let savingHistory = [];
         let creditCards = [];
-        
         let creditCardHistory = [];
+        let installments = [];
+        let financeBaseline = { cash: 0, savings: 0, creditDebt: 0, startDate: new Date().toISOString().slice(0,10) };
 
         function getCreditHistory(cardId) {
             return creditCardHistory.filter(h => h.cardId === cardId).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
@@ -1054,6 +1251,7 @@
             }
 
             const newTx = {
+                createdAt: new Date().toISOString(),
                 id: Date.now(),
                 type: type,
                 title: title,
@@ -1197,6 +1395,7 @@
 
             if(s.action === 'full') {
                 transactions.unshift({
+                    createdAt: new Date().toISOString(),
                     id: Date.now(),
                     type: 'income',
                     title: `Tất toán toàn bộ sổ ${s.name} (${s.bank})`,
@@ -1218,6 +1417,7 @@
                 savings.splice(index, 1);
             } else if(s.action === 'principal_only') {
                 transactions.unshift({
+                    createdAt: new Date().toISOString(),
                     id: Date.now(),
                     type: 'income',
                     title: `Nhận lãi sổ ${s.name} (${s.bank})`,
@@ -1242,6 +1442,7 @@
                 partialWithdraw = parseFloat(partialWithdraw) || 0;
                 
                 transactions.unshift({
+                    createdAt: new Date().toISOString(),
                     id: Date.now(),
                     type: 'income',
                     title: `Rút gốc giữ lãi sổ ${s.name}`,
@@ -1282,6 +1483,7 @@
             setUserData('income_sources', incomeSources);
 
             transactions.unshift({
+                createdAt: new Date().toISOString(),
                 id: newIncId + 1,
                 incomeSourceId: newIncId,
                 type: 'income',
@@ -1642,6 +1844,40 @@
             }
         }
 
+        function isPostBaselineTransaction(t) {
+            if(!t || !t.createdAt) return false; // giao dịch cũ trước khi thiết lập mốc không làm thay đổi số dư hiện tại
+            const start = new Date((financeBaseline.startDate || '').slice(0,10) + 'T00:00:00');
+            if(Number.isNaN(start.getTime())) return true;
+            return new Date(t.createdAt).getTime() >= start.getTime();
+        }
+        function getTrackedCashBalance() {
+            let balance = Number(financeBaseline.cash || 0);
+            transactions.forEach(t => {
+                if(!isPostBaselineTransaction(t)) return;
+                balance += t.type === 'income' ? Number(t.amount || 0) : -Number(t.amount || 0);
+            });
+            return balance;
+        }
+        function saveFinanceBaseline() {
+            const cash = Math.max(0, Number(document.getElementById('baselineCash').value) || 0);
+            const savingsValue = Math.max(0, Number(document.getElementById('baselineSavings').value) || 0);
+            const creditDebt = Math.max(0, Number(document.getElementById('baselineCredit').value) || 0);
+            const startDate = document.getElementById('baselineDate').value || new Date().toISOString().slice(0,10);
+            financeBaseline = { cash, savings:savingsValue, creditDebt, startDate };
+            setUserData('finance_baseline', financeBaseline);
+            renderAll();
+            alert('Đã lưu số dư đầu kỳ. Các giao dịch cũ sẽ không trừ/cộng vào số tiền hiện có; chỉ giao dịch phát sinh từ mốc này mới được tính.');
+        }
+        function renderFinanceBaseline() {
+            const c=document.getElementById('baselineCash'), sv=document.getElementById('baselineSavings'), cr=document.getElementById('baselineCredit'), d=document.getElementById('baselineDate');
+            if(c) c.value=Number(financeBaseline.cash||0);
+            if(sv) sv.value=Number(financeBaseline.savings||0);
+            if(cr) cr.value=Number(financeBaseline.creditDebt||0);
+            if(d) d.value=financeBaseline.startDate || new Date().toISOString().slice(0,10);
+            const el=document.getElementById('baselineSummary');
+            if(el) el.textContent=`Mốc quản lý: ${financeBaseline.startDate ? new Date(financeBaseline.startDate+'T00:00:00').toLocaleDateString('vi-VN') : '--'} • Chỉ tính giao dịch mới từ mốc này`;
+        }
+
         function formatMoney(amount) {
             return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
         }
@@ -1665,6 +1901,7 @@
             }
 
             const newTx = {
+                createdAt: new Date().toISOString(),
                 id: Date.now(),
                 type: type,
                 title: title,
@@ -1681,8 +1918,22 @@
         }
 
         function deleteTransaction(id) {
+            const tx = transactions.find(t => t.id === id);
+            if(!tx) return;
+            if(tx.installmentId) {
+                const ins = installments.find(x => x.id === tx.installmentId);
+                if(ins && tx.installmentAction === 'pay') ins.paid = Math.max(0, Number(ins.paid || 0) - Number(tx.amount || 0));
+            }
+            if(tx.creditCardId && tx.creditCardAction === 'opening_debt') {
+                const card=creditCards.find(c=>c.id===tx.creditCardId); if(card) card.debt=Math.max(0,Number(card.debt||0)-Number(tx.amount||0));
+            } else if(tx.creditCardId && tx.creditCardAction === 'spend') {
+                const card = creditCards.find(c => c.id === tx.creditCardId); if(card) card.debt = Math.max(0, Number(card.debt || 0) - Number(tx.amount || 0));
+            } else if(tx.creditCardId && tx.creditCardAction === 'pay') {
+                const card = creditCards.find(c => c.id === tx.creditCardId); if(card) card.debt += Number(tx.amount || 0);
+            }
             transactions = transactions.filter(t => t.id !== id);
             saveAndRefresh();
+            saveAndRefreshCredit();
         }
 
         function addSaving(e) {
@@ -1704,18 +1955,17 @@
                 rate: rate,
                 date: date,
                 month: month,
-                action: action
+                action: action,
+                sourceCategory: sourceCategory
             };
 
-            transactions.unshift({
-                id: Date.now() + 1,
-                type: 'expense',
-                title: `Mở sổ tiết kiệm ${name} (${bank})`,
-                amount: principal,
-                category: sourceCategory,
-                date: new Date().toLocaleDateString('vi-VN')
-            });
-
+            const includeInCashflow=askCashflowInclusion(`Số tiền mở sổ tiết kiệm ${formatMoney(principal)}`);
+            let savingTxId=null;
+            if(includeInCashflow){
+                savingTxId=Date.now()+1;
+                transactions.unshift({createdAt:new Date().toISOString(),id:savingTxId,type:'expense',title:`Mở sổ tiết kiệm ${name} (${bank})`,amount:principal,category:sourceCategory,date:new Date().toLocaleDateString('vi-VN'),linkedSavingId:newSv.id,isSavingTransfer:true,countsInCashflow:true});
+            }
+            newSv.openingTransactionId=savingTxId; newSv.openingCountsInCashflow=includeInCashflow;
             savings.unshift(newSv);
             saveAndRefreshSavings();
             saveAndRefresh();
@@ -1732,28 +1982,53 @@
         }
 
         function deleteSaving(id) {
-            savings = savings.filter(s => s.id !== id);
-            saveAndRefreshSavings();
+            const saving = savings.find(s => s.id === id);
+            if(!saving) return;
+
+            if(confirm(`Xóa sổ "${saving.name}" và hoàn lại ${formatMoney(Number(saving.principal || 0))} về nguồn tiền ban đầu?`)) {
+                const openingTitle = `Mở sổ tiết kiệm ${saving.name} (${saving.bank})`;
+                const principal = Number(saving.principal || 0);
+
+                // Xóa giao dịch đã dùng để lấy tiền mở sổ.
+                // Khi giao dịch chi này được xóa, số tiền tự động được cộng ngược
+                // vào số dư nguồn ban đầu (tiền mặt/tài khoản theo cách app tính số dư).
+                // Ưu tiên liên kết ID; có fallback cho các sổ cũ được tạo trước khi có liên kết.
+                const linkedTxIds = new Set();
+                if(saving.openingTransactionId) linkedTxIds.add(saving.openingTransactionId);
+
+                transactions.forEach(t => {
+                    if(t.linkedSavingId === saving.id ||
+                       (t.title === openingTitle && Number(t.amount || 0) === principal && t.isSavingTransfer)) {
+                        linkedTxIds.add(t.id);
+                    }
+                });
+
+                const removedCount = linkedTxIds.size;
+                transactions = transactions.filter(t => !linkedTxIds.has(t.id));
+                savings = savings.filter(s => s.id !== id);
+
+                saveAndRefreshSavings();
+                saveAndRefresh();
+
+                if(removedCount > 0) {
+                    // Thông báo xác nhận sau khi hoàn tiền về nguồn ban đầu.
+                    alert(`Đã hoàn ${formatMoney(principal)} về nguồn tiền ban đầu.`);
+                }
+            }
         }
 
         function addCreditCard(e) {
             e.preventDefault();
-            const newCard = {
-                id: Date.now(),
-                bank: document.getElementById('ccBank').value,
-                limit: parseFloat(document.getElementById('ccLimit').value),
-                warningLimit: parseFloat(document.getElementById('ccWarningLimit').value) || parseFloat(document.getElementById('ccLimit').value),
-                debt: parseFloat(document.getElementById('ccDebt').value),
-                statementDate: parseInt(document.getElementById('ccStatementDate').value),
-                dueDate: parseInt(document.getElementById('ccDueDate').value),
-                createdAt: new Date().toISOString()
-            };
-
+            const debt=Number(document.getElementById('ccDebt').value)||0;
+            const includeInCashflow=askCashflowInclusion('Số dư/Dư nợ ban đầu của thẻ này');
+            const newCard={id:Date.now(),bank:document.getElementById('ccBank').value,limit:Number(document.getElementById('ccLimit').value)||0,warningLimit:Number(document.getElementById('ccWarningLimit').value)||Number(document.getElementById('ccLimit').value)||0,debt,openingDebt:debt,openingDebtCountsInCashflow:includeInCashflow,statementDate:Number(document.getElementById('ccStatementDate').value),dueDate:Number(document.getElementById('ccDueDate').value),createdAt:new Date().toISOString()};
             creditCards.unshift(newCard);
-            addCreditHistory(newCard, 'statement', newCard.debt, 'Tạo thẻ mới / số dư ban đầu', newCard.debt);
-            saveAndRefreshCredit();
-            document.getElementById('creditForm').reset();
-            updateCategoryOptions();
+            if(debt>0) addCreditHistory(newCard,'statement',debt,includeInCashflow?'Tạo thẻ + dư nợ ban đầu (tính Thu/Chi)':'Tạo thẻ + dư nợ ban đầu (không tính Thu/Chi)',debt);
+            if(includeInCashflow && debt>0){
+                transactions.unshift({id:Date.now()+1,createdAt:new Date().toISOString(),type:'expense',title:`Dư nợ thẻ ban đầu - ${newCard.bank}`,amount:debt,category:'Dư nợ thẻ ban đầu',date:new Date().toLocaleDateString('vi-VN'),creditCardId:newCard.id,creditCardAction:'opening_debt',countsInCashflow:true});
+                setUserData('transactions',transactions);
+            }
+            saveAndRefreshCredit(); document.getElementById('creditForm').reset(); updateCategoryOptions();
         }
 
         function deleteCreditCard(id) {
@@ -1775,13 +2050,17 @@
             const inputAmount = document.getElementById('ccActionAmount');
 
             inputAmount.value = '';
+            const noteInput = document.getElementById('ccActionNote');
+            if(noteInput) noteInput.value = '';
 
             if(mode === 'spend') {
                 modalTitle.textContent = `Quẹt Thêm / Tiêu Dùng - ${card.bank}`;
                 actionLabel.textContent = 'Số tiền vừa quẹt thêm (VNĐ)';
+                if(noteInput) noteInput.placeholder = 'VD: Ăn uống, xăng xe, mua hàng...';
             } else if(mode === 'pay') {
                 modalTitle.textContent = `Thanh Toán Trả Nợ - ${card.bank}`;
                 actionLabel.textContent = 'Số tiền bạn đã trả vào thẻ (VNĐ)';
+                if(noteInput) noteInput.placeholder = 'VD: Thanh toán sao kê tháng 10...';
             } else if(mode === 'edit') {
                 modalTitle.textContent = `Cập Nhật Định Mức Cảnh Báo - ${card.bank}`;
                 actionLabel.textContent = 'Định mức cảnh báo mới (VNĐ)';
@@ -1800,15 +2079,48 @@
             const id = parseInt(document.getElementById('ccActionId').value);
             const mode = document.getElementById('ccActionMode').value;
             const amount = parseFloat(document.getElementById('ccActionAmount').value);
+            const note = (document.getElementById('ccActionNote')?.value || '').trim();
+            if(!amount || amount <= 0) return;
 
             const card = creditCards.find(c => c.id === id);
             if(card) {
                 if(mode === 'spend') {
+                    const includeInCashflow = askCashflowInclusion(`Quẹt thêm thẻ ${card.bank}: ${formatMoney(amount)}${note ? `\nNội dung: ${note}` : ''}`);
                     card.debt += amount;
-                    addCreditHistory(card, 'spend', amount, 'Ghi nhận quẹt thẻ', card.debt);
+                    const expenseTitle = note || `Quẹt thẻ ${card.bank}`;
+                    if(includeInCashflow) {
+                        transactions.unshift({
+                            createdAt: new Date().toISOString(),
+                            id: Date.now(),
+                            type: 'expense',
+                            title: expenseTitle,
+                            amount,
+                            category: note || 'Chi phí thẻ tín dụng',
+                            date: new Date().toLocaleDateString('vi-VN'),
+                            creditCardId: card.id,
+                            creditCardAction: 'spend',
+                            countsInCashflow: true
+                        });
+                    }
+                    addCreditHistory(card, 'spend', amount, `${note || 'Ghi nhận quẹt thẻ'}${includeInCashflow ? ' • Có tính Thu/Chi' : ' • Chỉ tăng dư nợ, không tính Thu/Chi'}`, card.debt);
+                    saveAndRefresh();
                 } else if(mode === 'pay') {
-                    card.debt = Math.max(0, card.debt - amount);
-                    addCreditHistory(card, 'pay', amount, 'Ghi nhận thanh toán', card.debt);
+                    const paidAmount = Math.min(amount, card.debt);
+                    card.debt = Math.max(0, card.debt - paidAmount);
+                    const paymentTitle = note || `Thanh toán thẻ ${card.bank}`;
+                    transactions.unshift({
+                        createdAt: new Date().toISOString(),
+                        id: Date.now(),
+                        type: 'expense',
+                        title: paymentTitle,
+                        amount: paidAmount,
+                        category: `Trả nợ ${card.bank}`,
+                        date: new Date().toLocaleDateString('vi-VN'),
+                        creditCardId: card.id,
+                        creditCardAction: 'pay'
+                    });
+                    addCreditHistory(card, 'pay', paidAmount, note || 'Ghi nhận thanh toán', card.debt);
+                    saveAndRefresh();
                 } else if(mode === 'edit') {
                     card.warningLimit = amount;
                 }
@@ -1817,9 +2129,246 @@
             }
         }
 
+        function updateInstallmentMethodUI(){
+            const method=document.getElementById('igMethod')?.value;
+            const cardWrap=document.getElementById('igCardWrap'), finWrap=document.getElementById('igFinanceWrap');
+            const card=document.getElementById('igCard'), fin=document.getElementById('igFinance');
+            if(!cardWrap||!finWrap||!card||!fin) return;
+            if(method==='credit'){
+                cardWrap.classList.remove('hidden'); finWrap.classList.add('hidden');
+                const selected=creditCards.find(c=>String(c.id)===String(card.value));
+                if(selected && selected.dueDate){
+                    const m=String(selected.dueDate).match(/\d+/);
+                    if(m) document.getElementById('igDueDay').value=Math.min(31,Number(m[0]));
+                }
+            } else {
+                cardWrap.classList.add('hidden'); finWrap.classList.remove('hidden');
+            }
+        }
+        function populateInstallmentCards(){
+            const el=document.getElementById('igCard'); if(!el) return;
+            const cards=Array.isArray(creditCards)?creditCards:[];
+            const current=el.value;
+            if(cards.length){
+                el.innerHTML=cards.map(c=>`<option value="${c.id}">${c.bank} • Dư nợ ${formatMoney(Number(c.debt||0))}</option>`).join('');
+                if(cards.some(c=>String(c.id)===String(current))) el.value=current;
+            }else{
+                el.innerHTML='<option value="">Chưa có thẻ — hãy tạo thẻ ở mục Thẻ Tín Dụng</option>';
+            }
+            updateInstallmentMethodUI();
+        }
+        function updateInstallmentMonthlyPreview(){
+            const total=Number(document.getElementById('igTotal')?.value||0);
+            const months=Number(document.getElementById('igMonths')?.value||0);
+            const el=document.getElementById('igMonthly');
+            if(!el) return;
+            if(total>0 && months>0){
+                const monthly=Math.round(total/months);
+                el.value=formatMoney(monthly);
+                el.dataset.amount=String(monthly);
+            } else {
+                el.value='';
+                el.dataset.amount='0';
+            }
+        }
+        function addMonthsDate(base, n, dueDay){
+            const d=new Date(base); d.setDate(1); d.setMonth(d.getMonth()+n); const last=new Date(d.getFullYear(),d.getMonth()+1,0).getDate(); d.setDate(Math.min(Number(dueDay)||1,last)); return d;
+        }
+        function addInstallment(e){
+            e.preventDefault();
+            const total=Number(document.getElementById('igTotal').value), months=Number(document.getElementById('igMonths').value);
+            const monthly=Math.max(1,Math.round(total/months));
+            const method=document.getElementById('igMethod').value;
+            if(total<=0||months<=0) { alert('Vui lòng nhập Tổng giá trị và Số kỳ hợp lệ.'); return; }
+            const includeInCashflow=askCashflowInclusion(`Khoản trả góp "${document.getElementById('igName').value.trim()}" - ${formatMoney(total)}`);
+            const item={id:Date.now(),name:document.getElementById('igName').value.trim(),total,monthly,months,paid:0,method,cardId:method==='credit'?Number(document.getElementById('igCard').value):null,financeName:method==='finance'?document.getElementById('igFinance').value.trim():'',startDate:document.getElementById('igStart').value,dueDay:Number(document.getElementById('igDueDay').value)||5,warningDays:Number(document.getElementById('igWarningDays').value)||0,createdAt:new Date().toISOString(),openingCountsInCashflow:includeInCashflow};
+            if(method==='credit'){
+                const card=creditCards.find(c=>c.id===item.cardId);
+                if(!card){ alert('Không tìm thấy thẻ tín dụng dùng cho khoản trả góp.'); return; }
+                card.debt=Number(card.debt||0)+total;
+                item.cardDebtAdded=total;
+                addCreditHistory(card,'installment',total,includeInCashflow?`Mở khoản trả góp ${item.name} (tính Thu/Chi)`:`Mở khoản trả góp ${item.name} (không tính Thu/Chi)`,card.debt);
+                if(includeInCashflow){ transactions.unshift({id:Date.now()+2,createdAt:new Date().toISOString(),type:'expense',title:`Mua trả góp: ${item.name}`,amount:total,category:`Trả góp - ${card.bank}`,date:new Date().toLocaleDateString('vi-VN'),installmentId:item.id,installmentAction:'opening',creditCardId:card.id,creditCardAction:'spend',countsInCashflow:true}); setUserData('transactions',transactions); }
+                setUserData('credit',creditCards);
+            }
+            if(method==='finance' && includeInCashflow){ transactions.unshift({id:Date.now()+3,createdAt:new Date().toISOString(),type:'expense',title:`Mua trả góp: ${item.name}`,amount:total,category:`Trả góp - ${item.financeName||'Tài chính'}`,date:new Date().toLocaleDateString('vi-VN'),installmentId:item.id,installmentAction:'opening',countsInCashflow:true}); setUserData('transactions',transactions); }
+            installments.unshift(item);
+            setUserData('installments',installments);
+            renderInstallments();
+            renderCreditCards();
+            document.getElementById('installmentForm').reset();
+            document.getElementById('igStart').value=new Date().toISOString().slice(0,10);
+            document.getElementById('igMethod').value='credit';
+            populateInstallmentCards();
+            updateInstallmentMonthlyPreview();
+        }
+        function installmentNextDue(i){ const paidPeriods=Math.floor(Number(i.paid||0)/Number(i.monthly||1)); return addMonthsDate(i.startDate,paidPeriods+1,i.dueDay); }
+        function installmentStatus(i){ const remain=Math.max(0,Number(i.total||0)-Number(i.paid||0)); if(remain<=0) return {cls:'bg-emerald-50 text-emerald-700 border-emerald-200',txt:'Đã tất toán'}; const due=installmentNextDue(i), today=new Date(); today.setHours(0,0,0,0); const diff=Math.ceil((due-today)/86400000); if(diff<0)return {cls:'bg-rose-50 text-rose-700 border-rose-200',txt:`Quá hạn ${Math.abs(diff)} ngày`}; if(diff<=Number(i.warningDays||0))return {cls:'bg-amber-50 text-amber-700 border-amber-200',txt:`Sắp đến hạn: ${diff} ngày`}; return {cls:'bg-blue-50 text-blue-700 border-blue-200',txt:`Còn ${diff} ngày`}; }
+        function recordInstallmentHistory(id){
+            const i=installments.find(x=>x.id===id); if(!i) return;
+            const total=Math.max(0,Number(i.total||0));
+            const monthly=Math.max(0,Number(i.monthly||0));
+            const remain=Math.max(0,total-Number(i.paid||0));
+            if(remain<=0){ alert('Khoản trả góp này đã được thanh toán hết.'); return; }
+            const maxPeriods=Math.max(1,Number(i.months||1));
+            const raw=prompt(`Bạn đã thanh toán trước bao nhiêu kỳ cho "${i.name}"? (Tối đa ${Math.max(0,maxPeriods-Math.floor(Number(i.paid||0)/Math.max(monthly,1)))} kỳ)`, '1');
+            if(raw===null) return;
+            const periods=Math.max(0,Math.floor(Number(raw)));
+            if(!periods){ alert('Số kỳ không hợp lệ.'); return; }
+            const amount=Math.min(remain, monthly*periods);
+            if(!amount){ alert('Không còn số tiền cần cập nhật.'); return; }
+            // Đây là dữ liệu lịch sử đã thanh toán trước khi nhập vào app:
+            // chỉ cập nhật tiến độ và dư nợ liên kết, KHÔNG tạo giao dịch Chi hiện tại.
+            if(i.method==='credit'){
+                const card=creditCards.find(c=>c.id===i.cardId);
+                if(!card){ alert('Không tìm thấy thẻ tín dụng liên kết với khoản trả góp.'); return; }
+                card.debt=Math.max(0,Number(card.debt||0)-amount);
+                addCreditHistory(card,'payment',amount,`Lịch sử đã thanh toán trước: ${i.name}`,card.debt);
+                setUserData('credit',creditCards);
+            }
+            i.paid=Math.min(total,Number(i.paid||0)+amount);
+            setUserData('installments',installments);
+            renderInstallments();
+            renderCreditCards();
+            renderAll();
+            alert(`Đã cập nhật ${periods} kỳ đã thanh toán trước (${formatMoney(amount)}). Không trừ tiền hiện tại.`);
+        }
+
+        function payInstallment(id){
+            const i=installments.find(x=>x.id===id); if(!i) return;
+            const remain=Math.max(0,Number(i.total)-Number(i.paid));
+            const amount=Math.min(Number(i.monthly),remain);
+            if(!askCashflowInclusion(`Bạn vừa thanh toán kỳ này ${formatMoney(amount)} cho "${i.name}"`)) return;
+            const tx={id:Date.now(),createdAt:new Date().toISOString(),type:'expense',title:`Thanh toán trả góp: ${i.name}`,amount,category:'Trả góp',date:new Date().toLocaleDateString('vi-VN'),installmentId:i.id,installmentAction:'pay'};
+            if(i.method==='credit'){
+                const card=creditCards.find(c=>c.id===i.cardId);
+                if(!card){alert('Không tìm thấy thẻ tín dụng liên kết với khoản trả góp.');return;}
+                card.debt=Math.max(0,Number(card.debt||0)-amount);
+                tx.creditCardId=card.id;
+                tx.creditCardAction='pay';
+                tx.category=`Thanh toán trả góp - ${card.bank}`;
+                addCreditHistory(card,'payment',amount,`Thanh toán trả góp ${i.name}`,card.debt);
+            }
+            i.paid=Number(i.paid||0)+amount;
+            transactions.unshift(tx);
+            saveAndRefresh(); saveAndRefreshCredit(); renderInstallments();
+        }
+        function prepayInstallment(id, method){
+            const i=installments.find(x=>x.id===id); if(!i) return;
+            const remain=Math.max(0,Number(i.total||0)-Number(i.paid||0));
+            if(remain<=0) return;
+            const methodName=method==='credit'?'thẻ tín dụng':'tiền mặt';
+            const raw=prompt(`Nhập số tiền trả trước bằng ${methodName} (còn ${formatMoney(remain)}):`, String(remain));
+            if(raw===null) return;
+            const amount=Math.min(Math.max(0,Number(String(raw).replace(/[^0-9.-]/g,''))),remain);
+            if(!amount){ alert('Số tiền trả trước không hợp lệ.'); return; }
+            if(!askCashflowInclusion(`Trả trước ${formatMoney(amount)} cho "${i.name}" bằng ${methodName}`)) return;
+            const tx={id:Date.now(),createdAt:new Date().toISOString(),type:'expense',title:`Trả trước khoản trả góp: ${i.name}`,amount,category:'Trả trước trả góp',date:new Date().toLocaleDateString('vi-VN'),installmentId:i.id,installmentAction:'prepay',prepaymentMethod:method};
+            if(method==='credit'){
+                const card=creditCards.find(c=>c.id===i.cardId);
+                if(!card){ alert('Khoản này chưa liên kết với thẻ tín dụng hiện có. Không thể trả trước bằng thẻ.'); return; }
+                // Trả trước bằng thẻ là một giao dịch chi tiêu mới trên chính thẻ, nên tăng dư nợ và đi vào kỳ sao kê của thẻ.
+                card.debt=Number(card.debt||0)+amount;
+                tx.creditCardId=card.id;
+                tx.creditCardAction='spend';
+                tx.category=`Trả trước trả góp bằng thẻ - ${card.bank}`;
+                addCreditHistory(card,'spend',amount,`Trả trước khoản ${i.name}`,card.debt);
+            } else {
+                // Trả trước bằng tiền mặt/tiền ngân hàng được ghi nhận như một khoản Chi trong Thu/Chi.
+                tx.category='Trả trước trả góp - Tiền mặt';
+            }
+            i.paid=Number(i.paid||0)+amount;
+            transactions.unshift(tx);
+            saveAndRefresh();
+            saveAndRefreshCredit();
+            renderInstallments();
+        }
+
+        function settleInstallment(id){
+            const i=installments.find(x=>x.id===id); if(!i) return;
+            const remain=Math.max(0,Number(i.total)-Number(i.paid));
+            if(remain<=0) return;
+            if(!askCashflowInclusion(`Tất toán ${formatMoney(remain)} cho "${i.name}"`)) return;
+            const tx={id:Date.now(),createdAt:new Date().toISOString(),type:'expense',title:`Tất toán trả góp: ${i.name}`,amount:remain,category:'Trả góp - Tất toán',date:new Date().toLocaleDateString('vi-VN'),installmentId:i.id,installmentAction:'pay'};
+            if(i.method==='credit'){
+                const card=creditCards.find(c=>c.id===i.cardId);
+                if(!card){alert('Không tìm thấy thẻ tín dụng liên kết với khoản trả góp.');return;}
+                card.debt=Math.max(0,Number(card.debt||0)-remain);
+                tx.creditCardId=card.id; tx.creditCardAction='pay'; tx.category=`Tất toán trả góp - ${card.bank}`;
+                addCreditHistory(card,'payment',remain,`Tất toán trả góp ${i.name}`,card.debt);
+            }
+            i.paid=Number(i.total||0);
+            transactions.unshift(tx);
+            saveAndRefresh(); saveAndRefreshCredit(); renderInstallments();
+        }
+        function deleteInstallment(id){ const i=installments.find(x=>x.id===id); if(!i)return; if(!confirm(`Xóa khoản trả góp "${i.name}"? Dữ liệu giao dịch đã phát sinh sẽ được giữ lại.`))return; installments=installments.filter(x=>x.id!==id); setUserData('installments',installments); renderInstallments(); }
+        function installmentProgressHTML(i, compact=false){
+            const total=Math.max(0,Number(i.total||0));
+            const paid=Math.min(total,Math.max(0,Number(i.paid||0)));
+            const remain=Math.max(0,total-paid);
+            const pct=total>0?Math.min(100,Math.round((paid/total)*100)):0;
+            const due=installmentNextDue(i);
+            const card=i.method==='credit'?creditCards.find(c=>c.id===i.cardId):null;
+            const method=card?`Thẻ: ${card.bank}`:(i.method==='credit'?'Thẻ tín dụng: Không còn thẻ':`Tài chính: ${i.financeName||'Ngân hàng/CTTC'}`);
+            const periods=Math.max(1,Number(i.months||1));
+            const monthly=Math.max(1,Number(i.monthly||1));
+            const paidPeriods=paid>=total?periods:Math.min(periods,Math.floor(paid/monthly)+1);
+            return `<div class="${compact?'p-3':'p-4'} rounded-xl border border-slate-200 bg-slate-50">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                        <div class="font-bold text-xs sm:text-sm text-slate-700 truncate">${i.name}</div>
+                        <div class="text-[10px] sm:text-[11px] text-slate-400 mt-1">${method} • Kỳ ${paid>=total?periods:paidPeriods}/${periods}</div>
+                    </div>
+                    <div class="text-right shrink-0">
+                        <div class="font-bold text-orange-600 text-xs sm:text-sm">Còn ${formatMoney(remain)}</div>
+                        <div class="text-[10px] text-slate-400">Đã trả ${formatMoney(paid)}</div>
+                    </div>
+                </div>
+                <div class="mt-3 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                    <div class="h-full rounded-full bg-orange-500 transition-all" style="width:${pct}%"></div>
+                </div>
+                <div class="flex justify-between items-center mt-1.5 text-[10px] text-slate-400">
+                    <span>${pct}% hoàn thành</span>
+                    <span>${remain>0?'Kỳ tới: '+due.toLocaleDateString('vi-VN'):'Đã tất toán'}</span>
+                </div>
+            </div>`;
+        }
+
+        function renderDashboardInstallments(){
+            const box=document.getElementById('dashboardInstallmentSummary');
+            if(!box) return;
+            if(!installments.length){
+                box.innerHTML='<div class="p-4 rounded-xl bg-slate-50 border border-dashed border-slate-200 text-center text-xs text-slate-400">Chưa có khoản trả góp nào.</div>';
+                return;
+            }
+            const active=installments.filter(i=>Number(i.total||0)>Number(i.paid||0));
+            const total=Math.max(0,installments.reduce((sum,i)=>sum+Number(i.total||0),0));
+            const paid=Math.max(0,installments.reduce((sum,i)=>sum+Math.min(Number(i.total||0),Number(i.paid||0)),0));
+            const remain=Math.max(0,total-paid);
+            const pct=total>0?Math.min(100,Math.round(paid/total*100)):100;
+            const sorted=[...active].sort((a,b)=>installmentNextDue(a)-installmentNextDue(b)).slice(0,3);
+            box.innerHTML=`<div class="mb-4">
+                <div class="flex flex-wrap items-end justify-between gap-3">
+                    <div><div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Tổng tiến độ</div><div class="text-lg font-bold text-slate-800 mt-1">${pct}%</div></div>
+                    <div class="text-right"><div class="text-[10px] text-slate-400">Còn phải trả</div><div class="text-sm font-bold text-orange-600">${formatMoney(remain)}</div></div>
+                </div>
+                <div class="mt-2 h-1.5 bg-slate-200 rounded-full overflow-hidden"><div class="h-full rounded-full bg-orange-500 transition-all" style="width:${pct}%"></div></div>
+                <div class="flex justify-between mt-1.5 text-[10px] text-slate-400"><span>Đã trả ${formatMoney(paid)}</span><span>Tổng ${formatMoney(total)}</span></div>
+            </div>
+            <div class="space-y-2">${sorted.length?sorted.map(i=>installmentProgressHTML(i,true)).join(''):'<div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-700 font-semibold">🎉 Các khoản trả góp đã được tất toán.</div>'}</div>`;
+        }
+
+        function renderInstallments(){
+            const list=document.getElementById('installmentList'), alerts=document.getElementById('installmentAlertList'); if(!list)return; populateInstallmentCards(); list.innerHTML=''; alerts.innerHTML=''; let remainTotal=0,dueCount=0;
+            installments.forEach(i=>{ const remain=Math.max(0,Number(i.total||0)-Number(i.paid||0)); remainTotal+=remain; const st=installmentStatus(i); if(st.txt.includes('Quá hạn')||st.txt.includes('Sắp đến hạn'))dueCount++; const due=installmentNextDue(i); const method=i.method==='credit'?`Thẻ: ${(creditCards.find(c=>c.id===i.cardId)||{}).bank||'Không còn thẻ'}`:`Tài chính: ${i.financeName||'Ngân hàng/CTTC'}`; if(st.txt.includes('Quá hạn')||st.txt.includes('Sắp đến hạn')) alerts.innerHTML+=`<div class="p-3 rounded-xl border ${st.cls} text-xs flex justify-between gap-3"><span><strong>⚠️ ${i.name}</strong> • ${st.txt}</span><span>Đến hạn ${due.toLocaleDateString('vi-VN')}</span></div>`; list.innerHTML+=`<div class="py-4 flex flex-col gap-3"><div class="flex flex-col md:flex-row md:items-center justify-between gap-3"><div><div class="font-bold text-sm text-slate-700">${i.name}</div><div class="text-[11px] text-slate-400 mt-1">${method} • Kỳ ${Math.min(Math.floor(Number(i.paid||0)/Number(i.monthly||1))+1,i.months)}/${i.months} • Đến hạn ${due.toLocaleDateString('vi-VN')}</div><div class="text-[11px] text-slate-500 mt-1">Mỗi kỳ khoảng <strong>${formatMoney(i.monthly)}</strong> • Đã trả ${formatMoney(i.paid)} / ${formatMoney(i.total)} • Còn <strong class="text-orange-600">${formatMoney(remain)}</strong></div></div><div class="flex flex-wrap items-center gap-2"><span class="px-2 py-1 rounded-lg border text-[10px] font-semibold ${st.cls}">${st.txt}</span>${remain>0?`<button onclick="payInstallment(${i.id})" class="bg-orange-500 text-white text-[11px] px-3 py-1.5 rounded-lg">Ghi nhận kỳ này</button><button onclick="recordInstallmentHistory(${i.id})" class="bg-violet-600 text-white text-[11px] px-3 py-1.5 rounded-lg">Cập nhật kỳ đã trả</button><button onclick="prepayInstallment(${i.id},'cash')" class="bg-slate-700 text-white text-[11px] px-3 py-1.5 rounded-lg">Trả trước tiền mặt</button><button onclick="prepayInstallment(${i.id},'credit')" class="bg-blue-600 text-white text-[11px] px-3 py-1.5 rounded-lg">Trả trước bằng thẻ</button><button onclick="settleInstallment(${i.id})" class="bg-emerald-600 text-white text-[11px] px-3 py-1.5 rounded-lg">Tất toán</button>`:''}<button onclick="deleteInstallment(${i.id})" class="text-slate-300 hover:text-rose-500 p-1"><i class="fa-solid fa-trash-can"></i></button></div></div>${installmentProgressHTML(i,false)}</div>`; });
+            document.getElementById('installmentDebtTotal').textContent=formatMoney(remainTotal); document.getElementById('installmentDueCount').textContent=`${dueCount} khoản`;
+            renderDashboardInstallments();
+        }
+
         function saveAndRefresh() {
             setUserData('transactions', transactions);
             setUserData('credit', creditCards);
+            setUserData('installments', installments);
             renderAll();
             runFinancialAdvisor();
         }
@@ -1833,6 +2382,7 @@
         function saveAndRefreshCredit() {
             setUserData('credit', creditCards);
             renderCreditCards();
+            renderInstallments();
             renderAll();
             runFinancialAdvisor();
         }
@@ -1875,7 +2425,7 @@
                 listEl.appendChild(item);
             });
 
-            const balance = totalInc - totalExp;
+            const balance = getTrackedCashBalance();
             let totalCreditDebt = creditCards.reduce((sum, card) => sum + card.debt, 0);
 
             let sumSavingTotal = 0;
@@ -1889,6 +2439,7 @@
             });
 
             document.getElementById('dashBalance').textContent = formatMoney(balance);
+            const balanceNote=document.getElementById('dashBalanceNote'); if(balanceNote) balanceNote.textContent='Số dư đầu kỳ + Thu/Chi mới từ mốc quản lý';
             document.getElementById('dashTotalSaving').textContent = formatMoney(sumSavingTotal);
             document.getElementById('dashCreditDebt').textContent = formatMoney(totalCreditDebt);
             document.getElementById('totalCreditDebtHeader').textContent = formatMoney(totalCreditDebt);
@@ -2002,6 +2553,81 @@
             document.getElementById('totalSavingSum').textContent = formatMoney(sumPrincipal + sumInterest);
         }
 
+        // Xác nhận thống nhất cho mọi khoản tiền nhập vào app.
+        // OK = Có tính vào Thu/Chi; Cancel = Không, chỉ cập nhật số dư/số liệu ban đầu.
+        function askCashflowInclusion(context){
+            return window.confirm(`Khoản này có tính vào Thu/Chi không?\n\n${context ? context+'\n\n' : ''}OK = CÓ: ghi nhận là phát sinh thực tế trong Thu/Chi.\nCancel = KHÔNG: chỉ cập nhật số dư/số liệu ban đầu, không tạo giao dịch Thu/Chi.`);
+        }
+
+        function parseTxDate(tx){
+            if(tx?.createdAt) { const d=new Date(tx.createdAt); if(!isNaN(d)) return d; }
+            const raw=String(tx?.date||'').trim();
+            const m=raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+            if(m) return new Date(Number(m[3]),Number(m[2])-1,Number(m[1]),12,0,0);
+            const d=new Date(raw); return isNaN(d)?null:d;
+        }
+        function creditCycleDates(card, now=new Date()){
+            const y=now.getFullYear(), m=now.getMonth();
+            let end=new Date(y,m,Math.min(Number(card.statementDate)||1,28),23,59,59);
+            if(now < end) end=new Date(y,m-1,Math.min(Number(card.statementDate)||1,28),23,59,59);
+            const start=new Date(end.getFullYear(),end.getMonth()-1,Math.min(Number(card.statementDate)||1,28),23,59,59);
+            start.setDate(start.getDate()+1); start.setHours(0,0,0,0);
+            const nextEnd=new Date(end.getFullYear(),end.getMonth()+1,Math.min(Number(card.statementDate)||1,28),23,59,59);
+            return {start,end,nextEnd};
+        }
+        function nextDueDate(card, statementEnd, now=new Date()){
+            let d=new Date(statementEnd.getFullYear(),statementEnd.getMonth()+1,Math.min(Number(card.dueDate)||1,28),23,59,59);
+            while(d < now) d=new Date(d.getFullYear(),d.getMonth()+1,Math.min(Number(card.dueDate)||1,28),23,59,59);
+            return d;
+        }
+        function creditStatementBreakdown(card, now=new Date()){
+            const {start,end,nextEnd}=creditCycleDates(card,now);
+            let dueSpend=0, duePay=0, nextSpend=0;
+
+            // Dùng lịch sử phát sinh của chính thẻ làm nguồn chính để tách kỳ sao kê.
+            // Điều này giúp các khoản quẹt thẻ đã phát sinh sau ngày sao kê trước
+            // luôn đi vào "Kỳ sao kê tiếp theo", kể cả khi giao dịch cũ chưa có
+            // đủ metadata creditCardAction trong bảng transactions.
+            const history = getCreditHistory(card.id);
+            history.forEach(h=>{
+                const d = h?.timestamp ? new Date(h.timestamp) : parseTxDate(h);
+                if(!d || isNaN(d)) return;
+                const amount = Number(h.amount || 0);
+                if(h.type === 'spend'){
+                    if(d >= start && d <= end) dueSpend += amount;
+                    else if(d > end && d <= now) nextSpend += amount;
+                } else if(h.type === 'pay' && d >= start && d <= now){
+                    duePay += amount;
+                }
+            });
+
+            // Fallback cho các giao dịch cũ chưa có trong creditCardHistory.
+            transactions.forEach(tx=>{
+                if(Number(tx.creditCardId)!==Number(card.id)) return;
+                if(tx.creditCardAction!=='spend' && tx.creditCardAction!=='pay') return;
+                const d=parseTxDate(tx); if(!d) return;
+                const amount=Number(tx.amount||0);
+                const alreadyInHistory = history.some(h=>{
+                    if(h.type !== (tx.creditCardAction==='spend' ? 'spend' : 'pay')) return false;
+                    const hd = h?.timestamp ? new Date(h.timestamp) : null;
+                    return hd && !isNaN(hd) && Math.abs(hd.getTime()-d.getTime()) < 2000 && Math.abs(Number(h.amount||0)-amount) < 0.01;
+                });
+                if(alreadyInHistory) return;
+                if(tx.creditCardAction==='spend'){
+                    if(d>=start && d<=end) dueSpend+=amount;
+                    else if(d>end && d<=now) nextSpend+=amount;
+                } else if(tx.creditCardAction==='pay' && d>=start && d<=now){
+                    duePay+=amount;
+                }
+            });
+
+            const dueAmount=Math.max(0,dueSpend-duePay);
+            const nextAmount=Math.max(0,nextSpend);
+            const dueDate=nextDueDate(card,end,now);
+            const days=Math.ceil((new Date(dueDate.getFullYear(),dueDate.getMonth(),dueDate.getDate())-new Date(now.getFullYear(),now.getMonth(),now.getDate()))/86400000);
+            return {start,end,nextEnd,dueSpend,duePay,dueAmount,nextAmount,dueDate,days};
+        }
+
         function renderCreditCards() {
             const cardListEl = document.getElementById('creditCardList');
             cardListEl.innerHTML = '';
@@ -2016,6 +2642,8 @@
                 const isWarningExceeded = c.debt > warningLimit;
                 const percentUsed = Math.min(Math.round((c.debt / c.limit) * 100), 100);
                 const availableLimit = c.limit - c.debt;
+                const stmt = creditStatementBreakdown(c);
+                const dueLabel = stmt.days < 0 ? `Quá hạn ${Math.abs(stmt.days)} ngày` : stmt.days === 0 ? 'Đến hạn hôm nay' : `Còn ${stmt.days} ngày`;
 
                 let warningBadge = `<span class="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold px-2.5 py-0.5 rounded-md">🟢 Trong định mức an toàn</span>`;
                 if(isWarningExceeded) {
@@ -2060,6 +2688,14 @@
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                        <div class="bg-rose-50 p-2 rounded-xl border border-rose-200 shadow-sm">
+                            <div class="flex items-center justify-between gap-2"><span class="font-semibold text-rose-800">Kỳ sao kê đến hạn</span><span class="text-[10px] font-bold ${stmt.dueAmount>0 ? 'text-rose-600' : 'text-emerald-600'}">${formatMoney(stmt.dueAmount)}</span></div>
+                            <div class="text-[9px] text-rose-700 mt-1">Hạn thanh toán: ${dueLabel} • ${stmt.dueDate.toLocaleDateString('vi-VN')}</div>
+                        </div>
+                        <div class="bg-blue-50 p-2 rounded-xl border border-blue-200 shadow-sm">
+                            <div class="flex items-center justify-between gap-2"><span class="font-semibold text-blue-800">Kỳ sao kê tiếp theo</span><span class="text-[10px] font-bold text-blue-600">${formatMoney(stmt.nextAmount)}</span></div>
+                            <div class="text-[9px] text-blue-700 mt-1">Phát sinh sau ngày ${c.statementDate}, chưa đến hạn</div>
+                        </div>
                         <div class="bg-white p-2 rounded-xl border border-slate-200 flex items-center justify-between shadow-sm">
                             <span class="text-slate-500"><i class="fa-regular fa-calendar text-blue-500 mr-1"></i> Ngày ${c.statementDate}:</span>
                             <span id="stmt-countdown-${c.id}" class="text-blue-600 font-medium text-right">Đang tính...</span>
@@ -2115,6 +2751,25 @@
                         </div>
                         <button onclick="switchTab('credit')" class="text-xs font-semibold px-3 py-1.5 bg-white border border-slate-200 rounded-xl shadow-sm hover:bg-slate-50 transition">Quản lý thẻ</button>
                     `;
+                    alertContainer.appendChild(alertDiv);
+                }
+            });
+
+            // Cảnh báo sao kê thẻ tín dụng sắp/đã đến hạn
+            creditCards.forEach(c => {
+                const stmt = creditStatementBreakdown(c);
+                const warnDays = 3;
+                if(stmt.dueAmount > 0 && stmt.days <= warnDays){
+                    const overdue = stmt.days < 0;
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = `p-4 rounded-2xl border flex items-center justify-between ${overdue ? 'bg-rose-50 border-rose-200 text-rose-800' : 'bg-amber-50 border-amber-200 text-amber-800'}`;
+                    alertDiv.innerHTML = `
+                        <div class="flex items-center space-x-3">
+                            <div class="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-white ${overdue ? 'bg-rose-500' : 'bg-amber-500'}"><i class="fa-solid fa-credit-card"></i></div>
+                            <div><h4 class="font-bold text-xs">${overdue ? 'Thẻ tín dụng đã quá hạn thanh toán!' : 'Sắp đến hạn thanh toán thẻ tín dụng'}</h4>
+                            <p class="text-[11px] mt-0.5">${c.bank}: kỳ đến hạn <strong>${formatMoney(stmt.dueAmount)}</strong> • ${overdue ? `quá hạn ${Math.abs(stmt.days)} ngày` : `còn ${stmt.days} ngày`}</p></div>
+                        </div>
+                        <button onclick="switchTab('credit')" class="text-xs font-semibold px-3 py-1.5 bg-white border border-slate-200 rounded-xl shadow-sm">Xem thẻ</button>`;
                     alertContainer.appendChild(alertDiv);
                 }
             });
@@ -2327,7 +2982,8 @@
             };
             reader.readAsText(file);
         }
-    </script>
+    document.addEventListener('DOMContentLoaded',()=>{ const st=document.getElementById('igStart'); if(st&&!st.value) st.value=new Date().toISOString().slice(0,10); populateInstallmentCards(); renderInstallments(); });
+</script>
     </div><!-- /appShell -->
 </body>
 </html>
